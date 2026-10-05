@@ -1,0 +1,83 @@
+{VERSION 6 0 "IBM INTEL NT" "6.0" }
+{USTYLETAB {CSTYLE "Maple Input" -1 0 "Courier" 0 1 255 0 0 1 0 1 0 0 
+1 0 0 0 0 1 }{CSTYLE "2D Math" -1 2 "Times" 0 1 0 0 0 0 0 0 2 0 0 0 0 
+0 0 1 }{CSTYLE "2D Output" 2 20 "" 0 1 0 0 255 1 0 0 0 0 0 0 0 0 0 1 }
+{PSTYLE "Normal" -1 0 1 {CSTYLE "" -1 -1 "" 0 1 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 }0 0 0 -1 -1 -1 0 0 0 0 0 0 -1 0 }{PSTYLE "Maple Output" 0 11 1 
+{CSTYLE "" -1 -1 "" 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 }3 3 0 -1 -1 -1 0 
+0 0 0 0 0 -1 0 }}
+{SECT 0 {EXCHG {PARA 0 "> " 0 "" {MPLTEXT 1 0 4218 "restart:\n\nVerify
+Lemma23 := proc()\n    local Nmax, Ptab, Atab, Btab,\n          n, r, \+
+g, sgn, total, t, s, k,\n          X0, Y0, X, Y, uv, baseIdx, idx, val
+ue,\n          labels, minima, argmins, counts,\n          expectedMin
+ima, expectedAt, expectedCounts;\n\n    # The largest required index i
+s 2*9999+4 = 20002.\n    Nmax := 20002;\n\n    # Exact partition numbe
+rs.\n    Ptab := Array(0..Nmax, datatype=anything, fill=0);\n    Ptab[
+0] := 1;\n\n    # Euler's pentagonal recurrence.\n    for n from 1 to \+
+Nmax do\n        total := 0;\n        r := 1;\n        sgn := 1;\n\n  \+
+      while true do\n            g := iquo(r*(3*r-1), 2);\n\n         \+
+   if g > n then\n                break;\n            end if;\n\n     \+
+       total := total+sgn*Ptab[n-g];\n\n            if g+r <= n then\n
+                total := total+sgn*Ptab[n-g-r];\n            end if;\n
+\n            r := r+1;\n            sgn := -sgn;\n        end do;\n\n
+        Ptab[n] := total;\n    end do;\n\n    # a(k) = p(k)-p(k-1), b(
+k) = p(k)-p(k-2).\n    # The convention is p(k)=0 for k<0.\n    Atab :
+= Array(0..Nmax, datatype=anything, fill=0);\n    Btab := Array(0..Nma
+x, datatype=anything, fill=0);\n\n    Atab[0] := 1;\n    Btab[0] := 1;
+\n\n    for k from 1 to Nmax do\n        Atab[k] := Ptab[k]-Ptab[k-1];
+\n\n        if k = 1 then\n            Btab[k] := Ptab[k];\n        el
+se\n            Btab[k] := Ptab[k]-Ptab[k-2];\n        end if;\n    en
+d do;\n\n    labels := [\"E\", \"U_R0\", \"V_R0\", \"U_Rs\", \"V_Rs\"]
+;\n\n    minima := Array(1..5, datatype=anything, fill=0);\n    argmin
+s := Array(1..5, datatype=anything, fill=0);\n    counts := Array(1..5
+, datatype=anything, fill=0);\n\n    # Check E(t) > 0 for 72 <= t <= 9
+999.\n    for t from 72 to 9999 do\n        value := Atab[t]^2-Atab[t-
+1]*Atab[t+1]\n                 -2*Atab[t]+Atab[t-1]+1;\n\n        if v
+alue <= 0 then\n            error \"Nonpositive E(t): [t,E(t)]=%1\", [
+t,value];\n        end if;\n\n        if argmins[1] = 0 or value < min
+ima[1] then\n            minima[1] := value;\n            argmins[1] :
+= t;\n        end if;\n\n        counts[1] := counts[1]+1;\n    end do
+;\n\n    X0 := Atab[72];\n    Y0 := Atab[71];\n\n    if X0 <> 695578 o
+r Y0 <> 609237 then\n        error \"Incorrect reference values: [a(72
+),a(71)]=%1\",\n              [X0,Y0];\n    end if;\n\n    # U_s(X,Y) \+
+= Y*b(s)-X*b(s-2).\n    # V_s(X,Y) = Y^2*b(s+2)-2*X*Y*b(s)+X^2*b(s-2).
+\n    # For Y>0, these are denominator-cleared forms of:\n    # (X/Y)*
+b(s-2) < b(s), and q_s(X/Y) > 0.\n    for s from 3 to 9999 do\n       \+
+ if s <= 34 then\n            X := X0;\n            Y := Y0;\n        \+
+    baseIdx := 2;\n        else\n            X := Atab[2*s+4];\n      \+
+      Y := Atab[2*s+3];\n            baseIdx := 4;\n        end if;\n
+\n        if Y <= 0 then\n            error \"Nonpositive ratio denomi
+nator at s=%1\", s;\n        end if;\n\n        uv := [\n            Y
+*Btab[s]-X*Btab[s-2],\n            Y^2*Btab[s+2]-2*X*Y*Btab[s]+X^2*Bta
+b[s-2]\n        ];\n\n        for k from 1 to 2 do\n            idx :=
+ baseIdx+k-1;\n            value := uv[k];\n\n            if value <= \+
+0 then\n                error \"Nonpositive certificate: [name,s,value
+]=%1\",\n                      [labels[idx],s,value];\n            end
+ if;\n\n            if argmins[idx] = 0 or value < minima[idx] then\n \+
+               minima[idx] := value;\n                argmins[idx] := \+
+s;\n            end if;\n\n            counts[idx] := counts[idx]+1;\n
+        end do;\n    end do;\n\n    # Exact minima and first attaining
+ indices from Appendix A.\n    expectedMinima := [\n        27986845,
+\n        522896,\n        168215963182,\n        774894329,\n        \+
+149021112963685\n    ];\n\n    expectedAt := [73, 3, 4, 35, 35];\n    \+
+expectedCounts := [9928, 32, 32, 9965, 9965];\n\n    for k from 1 to 5
+ do\n        if minima[k] <> expectedMinima[k]\n           or argmins[
+k] <> expectedAt[k]\n           or counts[k] <> expectedCounts[k] then
+\n            error \"Certificate mismatch: [name,count,minimum,index]
+=%1\",\n                  [labels[k],counts[k],minima[k],argmins[k]];
+\n        end if;\n\n        print([\n            labels[k], \"PASS\",
+\n            \"checks\", counts[k],\n            \"minimum\", minima[
+k],\n            \"first_index\", argmins[k]\n        ]);\n    end do;
+\n\n    print([\"LEMMA_2_3_AUXILIARY_CERTIFICATE_PASS\"]);\n    return
+ true;\nend proc:\n\nCertificateResult := VerifyLemma23():" }}{PARA 
+11 "" 1 "" {XPPMATH 20 "6#7*Q\"E6\"Q%PASSF%Q'checksF%\"%G**Q(minimumF%
+\")Xo)z#Q,first_indexF%\"#t" }}{PARA 11 "" 1 "" {XPPMATH 20 "6#7*Q%U_R
+06\"Q%PASSF%Q'checksF%\"#KQ(minimumF%\"''*G_Q,first_indexF%\"\"$" }}
+{PARA 11 "" 1 "" {XPPMATH 20 "6#7*Q%V_R06\"Q%PASSF%Q'checksF%\"#KQ(min
+imumF%\"-#=jf@o\"Q,first_indexF%\"\"%" }}{PARA 11 "" 1 "" {XPPMATH 20 
+"6#7*Q%U_Rs6\"Q%PASSF%Q'checksF%\"%l**Q(minimumF%\"*HV*[xQ,first_index
+F%\"#N" }}{PARA 11 "" 1 "" {XPPMATH 20 "6#7*Q%V_Rs6\"Q%PASSF%Q'checksF
+%\"%l**Q(minimumF%\"0&ojH6@!\\\"Q,first_indexF%\"#N" }}{PARA 11 "" 1 "
+" {XPPMATH 20 "6#7#QELEMMA_2_3_AUXILIARY_CERTIFICATE_PASS6\"" }}}
+{EXCHG {PARA 0 "> " 0 "" {MPLTEXT 1 0 0 "" }}}}{MARK "1 0 0" 0 }
+{VIEWOPTS 1 1 0 1 1 1803 1 1 1 1 }{PAGENUMBERS 0 1 2 33 1 1 }
